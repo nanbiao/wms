@@ -1,0 +1,143 @@
+<template>
+  <div>
+    <div style="margin-bottom: 5px;">
+      <el-input v-model="name" placeholder="名前を入力してください" suffix-icon="el-icon-search" style="width: 200px;" @keyup.enter.native="loadPost"></el-input>
+      <el-select v-model="sex" filterable placeholder="性別" style="margin-left: 5px;">
+        <el-option
+          v-for="item in sexs"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value">
+
+        </el-option>
+      </el-select>
+      <el-button type="primary" style="margin-left: 5px;" @click="loadPost">search</el-button>
+      <el-button type="success" @click="resetParam">reset</el-button>
+    </div>
+    <el-table
+      :data="tableData"
+      :header-cell-style="{ background: '#f2f5fc', color: 'black' }"
+    >
+      <el-table-column prop="id" label="ID" width="60"> </el-table-column>
+      <el-table-column prop="account" label="アカウント" width="150">
+      </el-table-column>
+      <el-table-column prop="name" label="名前" width="120"> </el-table-column>
+      <el-table-column prop="age" label="年齢" width="100"> </el-table-column>
+      <el-table-column prop="sex" label="性別" width="100">
+        <template slot-scope="scope">
+          <el-tag
+            :type="scope.row.sex === 1 ? 'primary' : 'success'"
+            disable-transitions
+            >{{ scope.row.sex === 1 ? "男" : "女" }}</el-tag
+          >
+        </template>
+      </el-table-column>
+      <el-table-column prop="roleId" label="ロール" width="150">
+        <template slot-scope="scope">
+          <el-tag
+            :type="
+              scope.row.roleId === 0
+                ? 'danger'
+                : scope.row.roleId === 1
+                ? 'primary'
+                : 'success'
+            "
+            disable-transitions
+            >{{
+              scope.row.roleId === 0
+                ? "ルート管理員"
+                : scope.row.roleId === 1
+                ? "管理員"
+                : "ユーザー"
+            }}</el-tag
+          >
+        </template>
+      </el-table-column>
+      <el-table-column prop="phone" label="電話" width="180"> </el-table-column>
+      <el-table-column prop="operate" label="操作">
+        <el-button size="small" type="success">編集</el-button>
+        <el-button size="small" type="danger">削除</el-button>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="pageNum"
+      :page-sizes="[2, 5, 10, 20]"
+      :page-size="pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+    >
+    </el-pagination>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      tableData: [],
+      pageSize: 2,
+      pageNum: 1,
+      total: 0,
+      name: '',
+      sex: '',
+      sexs: [
+        {
+          value: '1',
+          label: '男'
+        },
+        {
+          value: '2',
+          label: '女'
+        }
+      ]
+    };
+  },
+  methods: {
+    handleSizeChange(val) {
+        console.log(`每页 ${val} 条`);
+      },
+      handleCurrentChange(val) {
+        console.log(`当前页: ${val}`);
+        this.pageNum=val
+        this.loadPost()
+      },
+    loadGet() {
+      this.$axios.get(this.$httpUrl + "/user/list").then((res) => {
+        console.log(res);
+      });
+    },
+    loadPost() {
+      this.$axios.post(this.$httpUrl + "/user/listPageCustom", {
+        pageSize: this.pageSize,
+        pageNum: this.pageNum,
+        param:{
+          name: this.name,
+          sex: this.sex
+        }
+      }).then((res) => {
+        console.log(res);
+
+        if (res.data.code == 200) {
+          this.tableData = res.data.data;
+          this.total = res.data.total;
+        } else {
+          // alert('データ取得失敗')
+        }
+      });
+    },
+    resetParam(){
+      this.name='',
+      this.sex=''
+    }
+  },
+  created() {
+    // this.loadGet();
+    this.loadPost();
+  },
+};
+</script>
+
+<style>
+</style>
